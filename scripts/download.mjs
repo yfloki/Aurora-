@@ -38,10 +38,15 @@ async function unzip(zipPath, slug) {
   const { execFileSync } = await import('node:child_process');
   const tmpDir = zipPath + '.extract';
   fs.rmSync(tmpDir, { recursive: true, force: true });
-  execFileSync('powershell.exe', [
-    '-NoProfile', '-Command',
-    `Expand-Archive -LiteralPath '${zipPath}' -DestinationPath '${tmpDir}' -Force`,
-  ]);
+  if (process.platform === 'win32') {
+    execFileSync('powershell.exe', [
+      '-NoProfile', '-Command',
+      `Expand-Archive -LiteralPath '${zipPath}' -DestinationPath '${tmpDir}' -Force`,
+    ]);
+  } else {
+    fs.mkdirSync(tmpDir, { recursive: true });
+    execFileSync('unzip', ['-o', '-q', zipPath, '-d', tmpDir]);
+  }
   const files = fs.readdirSync(tmpDir)
     .map((f) => ({ f, size: fs.statSync(path.join(tmpDir, f)).size }))
     .sort((a, b) => b.size - a.size);
