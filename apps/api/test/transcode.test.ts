@@ -57,6 +57,24 @@ describe('pipeline FFmpeg', () => {
     expect(existsSync(path.join(tdir, 'sprite_0.jpg'))).toBe(true);
   });
 
+  it('multi-áudio: master ganha grupo EXT-X-MEDIA com renditions', async () => {
+    const outMulti = path.join(path.dirname(clip), 'out-multi');
+    await transcodeToHls(clip, outMulti, {
+      ladder: [TINY_LADDER[1]] as any,
+      audioTracks: [
+        { lang: 'eng', name: 'original', isDefault: true },
+        { file: clip, lang: 'por', name: 'dublado' }, // segunda faixa vinda de outro arquivo
+      ],
+    });
+    const master = readFileSync(path.join(outMulti, 'master.m3u8'), 'utf8');
+    expect(master).toContain('#EXT-X-MEDIA:TYPE=AUDIO');
+    expect(master).toContain('LANGUAGE="por"');
+    expect(master).toContain('LANGUAGE="eng"');
+    expect(master).toContain('DEFAULT=YES');
+    expect(existsSync(path.join(outMulti, 'dublado', 'index.m3u8'))).toBe(true);
+    expect(existsSync(path.join(outMulti, 'original', 'index.m3u8'))).toBe(true);
+  });
+
   it('extrai poster e backdrop', async () => {
     const idir = path.join(out, 'images');
     await extractStills(clip, idir);

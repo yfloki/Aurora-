@@ -20,7 +20,8 @@ export function Player({ title, profileId, startPositionS = 0, isLive = false }:
   const {
     videoRef, hlsRef, playing, position, duration, buffered, volume, muted,
     togglePlay, seek, seekBy, setVolume, toggleMute,
-    levels, currentLevel, autoLevel, setLevel, ready, error, retry,
+    levels, currentLevel, autoLevel, setLevel,
+    audioTracks, currentAudio, setAudioTrack, ready, error, retry,
   } = usePlayer(src, startPositionS);
 
   const [showStats, setShowStats] = useState(false);
@@ -210,6 +211,9 @@ export function Player({ title, profileId, startPositionS = 0, isLive = false }:
           levels={levels}
           currentLevel={currentLevel}
           autoLevel={autoLevel}
+          audioTracks={audioTracks}
+          currentAudio={currentAudio}
+          onSetAudio={setAudioTrack}
           thumbCues={thumbCues}
           thumbsBaseUrl={thumbsBaseUrl}
           activeSubtitle={activeSubtitle}

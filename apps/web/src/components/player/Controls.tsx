@@ -2,7 +2,7 @@
 import { useMemo, useRef, useState } from 'react';
 import type { Title } from '@aurora/shared';
 import { findThumbCue, type ThumbCue } from './ThumbStrip';
-import type { QualityLevel } from './usePlayer';
+import type { QualityLevel, AudioTrackInfo } from './usePlayer';
 
 function fmt(s: number): string {
   if (!isFinite(s) || s < 0) s = 0;
@@ -27,6 +27,9 @@ interface ControlsProps {
   levels: QualityLevel[];
   currentLevel: number;
   autoLevel: number;
+  audioTracks: AudioTrackInfo[];
+  currentAudio: number;
+  onSetAudio: (id: number) => void;
   thumbCues: ThumbCue[];
   thumbsBaseUrl: string;
   activeSubtitle: string | null;
@@ -45,7 +48,8 @@ interface ControlsProps {
 export function Controls(props: ControlsProps) {
   const {
     visible, title, isLive, playing, position, duration, buffered, volume, muted,
-    levels, currentLevel, autoLevel, thumbCues, thumbsBaseUrl, activeSubtitle, fullscreen,
+    levels, currentLevel, autoLevel, audioTracks, currentAudio, onSetAudio,
+    thumbCues, thumbsBaseUrl, activeSubtitle, fullscreen,
     onTogglePlay, onSeek, onSeekBy, onSetVolume, onToggleMute, onSetLevel, onSetSubtitle,
     onToggleFullscreen, onBack,
   } = props;
@@ -54,6 +58,7 @@ export function Controls(props: ControlsProps) {
   const [hoverPct, setHoverPct] = useState<number | null>(null);
   const [qualityOpen, setQualityOpen] = useState(false);
   const [subsOpen, setSubsOpen] = useState(false);
+  const [audioOpen, setAudioOpen] = useState(false);
 
   const pct = duration > 0 ? (position / duration) * 100 : 0;
   const bufferedPct = duration > 0 ? (buffered / duration) * 100 : 0;
@@ -161,10 +166,35 @@ export function Controls(props: ControlsProps) {
           )}
 
           <div className="ml-auto flex items-center gap-4">
+            {audioTracks.length > 1 && (
+              <div className="relative">
+                <button
+                  onClick={() => { setAudioOpen((v) => !v); setSubsOpen(false); setQualityOpen(false); }}
+                  aria-label="Áudio" className="text-lg leading-none"
+                >
+                  🎧
+                </button>
+                {audioOpen && (
+                  <div className="glass absolute bottom-8 right-0 min-w-44 rounded-lg p-2 text-sm">
+                    <p className="px-3 py-1 text-xs text-muted">Áudio</p>
+                    {audioTracks.map((t) => (
+                      <button
+                        key={t.id}
+                        onClick={() => { onSetAudio(t.id); setAudioOpen(false); }}
+                        className={`block w-full rounded px-3 py-1.5 text-left hover:bg-white/10 ${currentAudio === t.id ? 'text-(--accent2)' : ''}`}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {title.subtitles.length > 0 && (
               <div className="relative">
                 <button
-                  onClick={() => { setSubsOpen((v) => !v); setQualityOpen(false); }}
+                  onClick={() => { setSubsOpen((v) => !v); setQualityOpen(false); setAudioOpen(false); }}
                   aria-label="Legendas" className="text-lg leading-none"
                 >
                   💬

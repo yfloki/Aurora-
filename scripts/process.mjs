@@ -40,9 +40,18 @@ for (const movie of MOVIES) {
     if (fs.existsSync(path.join(outHls, 'master.m3u8'))) {
       console.log(`✓ já transcodificado: ${movie.slug}`);
     } else {
-      console.log(`⚙ transcodificando ${movie.slug} (isso demora)...`);
+      // faixa dublada opcional: content/source/<slug>.dub.m4a (gerada por make-dub.mjs)
+      const dub = path.join(dirs.source, `${movie.slug}.dub.m4a`);
+      const audioTracks = fs.existsSync(dub)
+        ? [
+            { lang: 'eng', name: 'original', isDefault: true },
+            { file: dub, lang: 'por', name: 'dublado' },
+          ]
+        : undefined;
+      console.log(`⚙ transcodificando ${movie.slug}${audioTracks ? ' (com faixa dublada)' : ''} (isso demora)...`);
       let last = -1;
       await transcodeToHls(src, outHls, {
+        audioTracks,
         onProgress: (p) => {
           const pct = Math.floor(p);
           if (pct !== last && pct % 5 === 0) { console.log(`  HLS ${movie.slug}: ${pct}%`); last = pct; }
@@ -52,11 +61,16 @@ for (const movie of MOVIES) {
       await extractStills(src, outImg);
       console.log(`✔ pronto: ${movie.slug}`);
     }
-    const subSrc = path.join(root, 'apps', 'api', 'seed', 'subs', `${movie.slug}.vtt`);
-    if (fs.existsSync(subSrc)) {
-      const subDir = path.join(outHls, 'subs');
-      fs.mkdirSync(subDir, { recursive: true });
-      fs.copyFileSync(subSrc, path.join(subDir, 'pt-BR.vtt'));
+    const subDir = path.join(outHls, 'subs');
+    for (const [srcName, destName] of [
+      [`${movie.slug}.vtt`, 'pt-BR.vtt'],
+      [`${movie.slug}.en.vtt`, 'en.vtt'],
+    ]) {
+      const subSrc = path.join(root, 'apps', 'api', 'seed', 'subs', srcName);
+      if (fs.existsSync(subSrc)) {
+        fs.mkdirSync(subDir, { recursive: true });
+        fs.copyFileSync(subSrc, path.join(subDir, destName));
+      }
     }
   } catch (err) {
     console.error(`✗ falhou ${movie.slug}: ${err.message}`);
@@ -65,7 +79,8 @@ for (const movie of MOVIES) {
 
 // resemeia o catálogo com o que existe (o bootstrap da API também faz isso na subida)
 const seedJson = JSON.parse(
-  fs.readFileSync(path.join(root, 'apps', 'api', 'seed', 'titles.json'), 'utf8'));
+  fs.readFileSync(path.join(root, 'apps', 'api', 'seed', 'titles.json'), 'utf8')
+    .replace(/^﻿/, ''));
 const inContent = (rel) => rel && fs.existsSync(path.join(content, rel)) ? rel : null;
 const db = openDb(path.join(dirs.db, 'app.db'));
 seedCatalog(db, seedJson.map((e) => ({

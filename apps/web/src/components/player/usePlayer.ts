@@ -8,6 +8,24 @@ export interface QualityLevel {
   bitrate: number;
 }
 
+export interface AudioTrackInfo {
+  id: number;
+  lang: string;
+  label: string;
+}
+
+const AUDIO_LANG_LABELS: Record<string, string> = {
+  por: 'Português (dublado)', pt: 'Português (dublado)',
+  eng: 'Inglês (original)', en: 'Inglês (original)',
+  und: 'Áudio original',
+};
+
+function audioLabel(name: string | undefined, lang: string | undefined, idx: number): string {
+  if (lang && AUDIO_LANG_LABELS[lang]) return AUDIO_LANG_LABELS[lang];
+  if (name) return name.replace(/[-_]/g, ' ');
+  return `Faixa ${idx + 1}`;
+}
+
 export function usePlayer(src: string | null, startPositionS = 0) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
@@ -25,6 +43,8 @@ export function usePlayer(src: string | null, startPositionS = 0) {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryTick, setRetryTick] = useState(0);
+  const [audioTracks, setAudioTracks] = useState<AudioTrackInfo[]>([]);
+  const [currentAudio, setCurrentAudio] = useState(-1);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -52,6 +72,13 @@ export function usePlayer(src: string | null, startPositionS = 0) {
         if (startPositionS > 0) video.currentTime = startPositionS;
       });
       hls.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => setAutoLevel(data.level));
+      hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, () => {
+        setAudioTracks(hls.audioTracks.map((t, i) => ({
+          id: i, lang: t.lang ?? '', label: audioLabel(t.name, t.lang, i),
+        })));
+        setCurrentAudio(hls.audioTrack);
+      });
+      hls.on(Hls.Events.AUDIO_TRACK_SWITCHED, (_e, data) => setCurrentAudio(data.id));
       hls.on(Hls.Events.ERROR, (_e, data) => {
         if (!data.fatal) return;
         fatalErrorCount.current += 1;
@@ -160,9 +187,16 @@ export function usePlayer(src: string | null, startPositionS = 0) {
     fatalErrorCount.current = 0;
     setRetryTick((t) => t + 1);
   }, []);
+  const setAudioTrack = useCallback((id: number) => {
+    const hls = hlsRef.current;
+    if (!hls) return;
+    hls.audioTrack = id;
+    setCurrentAudio(id);
+  }, []);
 
   return {
     videoRef, hlsRef, levels, currentLevel, autoLevel, setLevel,
+    audioTracks, currentAudio, setAudioTrack,
     playing, position, duration, buffered, volume, muted,
     play, pause, togglePlay, seek, seekBy, setVolume, toggleMute,
     ready, error, retry,

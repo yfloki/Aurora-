@@ -13,7 +13,8 @@ import { PATHS } from './paths';
 export function bootstrapSeed(db: Db) {
   const file = path.resolve(process.cwd(), 'seed', 'titles.json');
   if (!fs.existsSync(file)) return;
-  const entries = JSON.parse(fs.readFileSync(file, 'utf8')) as SeedEntry[];
+  const entries = JSON.parse(
+    fs.readFileSync(file, 'utf8').replace(/^﻿/, '')) as SeedEntry[];
   const inContent = (rel: string | null) =>
     rel && fs.existsSync(path.join(PATHS.content, rel)) ? rel : null;
   seedCatalog(db, entries.map((e) => ({
