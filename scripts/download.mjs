@@ -33,12 +33,44 @@ async function download(url, dest) {
   console.log(`  ok: ${path.basename(dest)} (${(got / 1e6).toFixed(0)} MB)`);
 }
 
+async function unzip(zipPath, slug) {
+  // extrai para pasta temporária e move o maior arquivo para source/<slug>.<ext>
+  const { execFileSync } = await import('node:child_process');
+  const tmpDir = zipPath + '.extract';
+  fs.rmSync(tmpDir, { recursive: true, force: true });
+  execFileSync('powershell.exe', [
+    '-NoProfile', '-Command',
+    `Expand-Archive -LiteralPath '${zipPath}' -DestinationPath '${tmpDir}' -Force`,
+  ]);
+  const files = fs.readdirSync(tmpDir)
+    .map((f) => ({ f, size: fs.statSync(path.join(tmpDir, f)).size }))
+    .sort((a, b) => b.size - a.size);
+  if (!files.length) throw new Error('zip vazio');
+  const inner = files[0].f;
+  const finalPath = path.join(sourceDir, `${slug}${path.extname(inner)}`);
+  fs.renameSync(path.join(tmpDir, inner), finalPath);
+  fs.rmSync(tmpDir, { recursive: true, force: true });
+  fs.rmSync(zipPath, { force: true });
+  console.log(`  extraído: ${path.basename(finalPath)}`);
+}
+
 const failures = [];
 for (const movie of MOVIES) {
-  const ext = path.extname(new URL(movie.url).pathname) || '.mp4';
-  const dest = path.join(sourceDir, `${movie.slug}${ext}`);
+  const urlPath = new URL(movie.url).pathname;
+  const isZip = urlPath.endsWith('.zip');
+  const ext = isZip
+    ? path.extname(urlPath.slice(0, -4)) || '.mp4'
+    : path.extname(urlPath) || '.mp4';
+  const finalDest = path.join(sourceDir, `${movie.slug}${ext}`);
+  if (fs.existsSync(finalDest)) { console.log(`✓ já baixado: ${path.basename(finalDest)}`); continue; }
   try {
-    await download(movie.url, dest);
+    if (isZip) {
+      const zipDest = path.join(sourceDir, `${movie.slug}.zip`);
+      await download(movie.url, zipDest);
+      await unzip(zipDest, movie.slug);
+    } else {
+      await download(movie.url, finalDest);
+    }
   } catch (err) {
     console.error(`✗ falhou ${movie.slug}: ${err.message}`);
     failures.push(movie.slug);

@@ -5,6 +5,8 @@ import { PATHS, ensureDirs } from './paths';
 import { bootstrapSeed } from './bootstrap-seed';
 import { createTitlesRouter } from './routes/titles';
 import { createProfilesRouter } from './routes/profiles';
+import { createLiveManager } from './live';
+import { createLiveRouter } from './routes/live';
 
 ensureDirs();
 export const db = openDb(PATHS.db);
@@ -17,10 +19,11 @@ app.get('/api/health', (_req, res) => res.json({ ok: true }));
 app.use('/api/titles', createTitlesRouter(db));
 app.use('/api/profiles', createProfilesRouter(db));
 
-// Rotas de jobs/upload/live entram nas Tasks 7–9 (agentes ruflo).
-// Até lá, /api/live/status responde inativo para a home não quebrar.
-app.get('/api/live/status', (_req, res) =>
-  res.json({ active: false, key: null, hlsPath: null, startedAt: null }));
+const live = createLiveManager({ hlsDir: PATHS.hls });
+live.start();
+app.use('/api/live', createLiveRouter(live));
+
+// Rotas de jobs/upload entram nas Tasks 7–8 (agente ruflo em andamento).
 app.get('/api/jobs', (_req, res) => res.json([]));
 
 app.listen(4000, () => console.log('[api] http://localhost:4000'));

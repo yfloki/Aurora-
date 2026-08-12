@@ -28,7 +28,10 @@ const only = process.argv[2];
 
 for (const movie of MOVIES) {
   if (only && movie.slug !== only) continue;
-  const ext = path.extname(new URL(movie.url).pathname) || '.mp4';
+  const urlPath = new URL(movie.url).pathname;
+  const ext = (urlPath.endsWith('.zip')
+    ? path.extname(urlPath.slice(0, -4))
+    : path.extname(urlPath)) || '.mp4';
   const src = path.join(dirs.source, `${movie.slug}${ext}`);
   if (!fs.existsSync(src)) { console.log(`… sem fonte ainda: ${movie.slug}`); continue; }
   const outHls = path.join(dirs.hls, movie.slug);
