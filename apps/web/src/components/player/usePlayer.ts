@@ -70,6 +70,12 @@ export function usePlayer(src: string | null, startPositionS = 0) {
         );
         setReady(true);
         if (startPositionS > 0) video.currentTime = startPositionS;
+        // autoplay: tenta com som; se o navegador bloquear, entra mudo
+        // (o Player mostra o chip "Ativar som")
+        video.play().catch(() => {
+          video.muted = true;
+          video.play().catch(() => {});
+        });
       });
       hls.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => setAutoLevel(data.level));
       hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, () => {
@@ -111,6 +117,10 @@ export function usePlayer(src: string | null, startPositionS = 0) {
       const onLoaded = () => {
         setReady(true);
         if (startPositionS > 0) video.currentTime = startPositionS;
+        video.play().catch(() => {
+          video.muted = true;
+          video.play().catch(() => {});
+        });
       };
       video.addEventListener('loadedmetadata', onLoaded);
       return () => video.removeEventListener('loadedmetadata', onLoaded);

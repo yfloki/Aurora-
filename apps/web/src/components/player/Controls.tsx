@@ -4,6 +4,36 @@ import type { Title } from '@aurora/shared';
 import { findThumbCue, type ThumbCue } from './ThumbStrip';
 import type { QualityLevel, AudioTrackInfo } from './usePlayer';
 
+function PlayGlyph({ className = 'size-6' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M8 5v14l11-7z" />
+    </svg>
+  );
+}
+
+function PauseGlyph({ className = 'size-6' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M6 4h4v16H6zM14 4h4v16h-4z" />
+    </svg>
+  );
+}
+
+/** Setinha circular com "10" dentro, como a Netflix. */
+function Seek10Glyph({ forward = false, className = 'size-8' }:
+  { forward?: boolean; className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d={forward
+        ? 'M18 13c0 3.31-2.69 6-6 6s-6-2.69-6-6 2.69-6 6-6v4l5-5-5-5v4c-4.42 0-8 3.58-8 8s3.58 8 8 8 8-3.58 8-8h-2z'
+        : 'M11.99 5V1l-5 5 5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6h-2c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z'} />
+      <text x="12" y="16.8" textAnchor="middle" fontSize="7" fontWeight="700"
+        fill="currentColor" stroke="none">10</text>
+    </svg>
+  );
+}
+
 function fmt(s: number): string {
   if (!isFinite(s) || s < 0) s = 0;
   const h = Math.floor(s / 3600);
@@ -95,10 +125,15 @@ export function Controls(props: ControlsProps) {
         </div>
       </div>
 
-      <button onClick={onTogglePlay} aria-label={playing ? 'Pausar' : 'Reproduzir'}
-        className="pointer-events-auto mx-auto grid size-16 place-items-center rounded-full bg-black/40 text-3xl">
-        {playing ? '❚❚' : '▶'}
-      </button>
+      {!playing ? (
+        <button onClick={onTogglePlay} aria-label="Reproduzir"
+          className="pointer-events-auto mx-auto grid size-20 place-items-center rounded-full
+            bg-white/15 backdrop-blur-sm transition hover:scale-110 hover:bg-white/25">
+          <PlayGlyph className="size-10 translate-x-0.5" />
+        </button>
+      ) : (
+        <div className="mx-auto" />
+      )}
 
       <div className="pointer-events-auto flex flex-col gap-2 p-6">
         {!isLive && (
@@ -139,13 +174,20 @@ export function Controls(props: ControlsProps) {
         )}
 
         <div className="flex items-center gap-4">
-          <button onClick={onTogglePlay} aria-label={playing ? 'Pausar' : 'Reproduzir'} className="text-xl leading-none">
-            {playing ? '❚❚' : '▶'}
+          <button onClick={onTogglePlay} aria-label={playing ? 'Pausar' : 'Reproduzir'}
+            className="transition-transform hover:scale-110">
+            {playing ? <PauseGlyph className="size-7" /> : <PlayGlyph className="size-7" />}
           </button>
           {!isLive && (
             <>
-              <button onClick={() => onSeekBy(-10)} aria-label="Voltar 10 segundos" className="text-lg leading-none">⏪</button>
-              <button onClick={() => onSeekBy(10)} aria-label="Avançar 10 segundos" className="text-lg leading-none">⏩</button>
+              <button onClick={() => onSeekBy(-10)} aria-label="Voltar 10 segundos"
+                className="transition-transform hover:scale-110">
+                <Seek10Glyph className="size-8" />
+              </button>
+              <button onClick={() => onSeekBy(10)} aria-label="Avançar 10 segundos"
+                className="transition-transform hover:scale-110">
+                <Seek10Glyph forward className="size-8" />
+              </button>
             </>
           )}
 

@@ -125,8 +125,11 @@ export function Player({ title, profileId, startPositionS = 0, isLive = false }:
     setActiveSubtitle(lang);
     const tracks = videoRef.current?.textTracks;
     if (!tracks) return;
+    const want = lang?.toLowerCase() ?? null;
     for (let i = 0; i < tracks.length; i++) {
-      tracks[i].mode = tracks[i].language === lang ? 'showing' : 'disabled';
+      const trackLang = (tracks[i].language || '').toLowerCase();
+      const match = want !== null && (trackLang === want || trackLang.startsWith(want.split('-')[0]));
+      tracks[i].mode = match ? 'showing' : 'disabled';
     }
   }, [videoRef]);
 
@@ -185,6 +188,13 @@ export function Player({ title, profileId, startPositionS = 0, isLive = false }:
       {showStats && !error && (
         <StatsPanel stats={stats} series={series}
           throttleBps={throttleBps} onThrottle={handleThrottle} />
+      )}
+
+      {playing && muted && (
+        <button onClick={toggleMute}
+          className="glass absolute bottom-28 left-6 z-50 rounded-full px-5 py-2.5 text-sm font-semibold">
+          🔊 Ativar som
+        </button>
       )}
 
       {!error && visible && (
