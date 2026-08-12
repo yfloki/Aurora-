@@ -7,6 +7,7 @@ import { PATHS, ensureDirs } from './paths';
 import { bootstrapSeed } from './bootstrap-seed';
 import { requireAuth } from './auth';
 import { createAuthRouter } from './routes/auth';
+import { createPublicRouter } from './routes/public';
 import { createTitlesRouter } from './routes/titles';
 import { createProfilesRouter } from './routes/profiles';
 import { createLiveManager } from './live';
@@ -27,6 +28,7 @@ app.use(express.json());
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 
 app.use('/api/auth', createAuthRouter(db));
+app.use('/api/public', createPublicRouter(db));
 app.use('/api/titles', requireAuth, createTitlesRouter(db));
 app.use('/api/profiles', requireAuth, createProfilesRouter(db));
 
