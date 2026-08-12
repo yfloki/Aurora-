@@ -40,8 +40,11 @@ for (const movie of MOVIES) {
     if (fs.existsSync(path.join(outHls, 'master.m3u8'))) {
       console.log(`✓ já transcodificado: ${movie.slug}`);
     } else {
-      // faixa dublada opcional: content/source/<slug>.dub.m4a (gerada por make-dub.mjs)
+      // faixa dublada opcional: content/source/<slug>.dub.m4a (gerada por make-dub.mjs
+      // no Windows). Em deploy, vem pré-gerada do repo em apps/api/seed/dubs.
       const dub = path.join(dirs.source, `${movie.slug}.dub.m4a`);
+      const seedDub = path.join(root, 'apps', 'api', 'seed', 'dubs', `${movie.slug}.dub.m4a`);
+      if (!fs.existsSync(dub) && fs.existsSync(seedDub)) fs.copyFileSync(seedDub, dub);
       const audioTracks = fs.existsSync(dub)
         ? [
             { lang: 'eng', name: 'original', isDefault: true },

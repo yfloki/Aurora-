@@ -18,6 +18,8 @@ const AMBIENT = {
        '(passos)', '(música suave)', '(respiração)', '(trilha sonora épica)'],
   en: ['(orchestral music)', '(wind blowing)', '(ambient sounds)', '(tense music)',
        '(footsteps)', '(soft music)', '(breathing)', '(epic score)'],
+  es: ['(música orquestal)', '(viento soplando)', '(sonidos del ambiente)', '(música de tensión)',
+       '(pasos)', '(música suave)', '(respiración)', '(banda sonora épica)'],
 };
 
 const fmt = (ms) => {
@@ -70,6 +72,7 @@ for (const title of titles) {
   for (const [seedName, destName, lang] of [
     [`${title.slug}.vtt`, 'pt-BR.vtt', 'pt'],
     [`${title.slug}.en.vtt`, 'en.vtt', 'en'],
+    [`${title.slug}.es.vtt`, 'es.vtt', 'es'],
   ]) {
     const beats = parseCues(path.join(seedDir, seedName));
     fs.writeFileSync(path.join(outDir, destName), buildVtt(beats, title.durationS, lang));
