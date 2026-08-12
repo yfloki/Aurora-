@@ -12,4 +12,9 @@ export const MOVIES = [
     url: 'https://archive.org/download/CosmosLaundromatFirstCycle/Cosmos%20Laundromat%20-%20First%20Cycle%20%281080p%29.mp4' },
   { slug: 'spring',
     url: 'https://archive.org/download/spring-blender-open-movie/spring-1080p.mp4' },
+  // Domínio público (EUA) — com dublagem pt-BR de estúdio já existente:
+  // dubUrl aponta a versão dublada; scripts/dub.mjs alinha e extrai a faixa.
+  { slug: 'night-of-the-living-dead',
+    url: 'https://archive.org/download/Night.Of.The.Living.Dead_1080p/NightOfTheLivingDead_1080p.mp4',
+    dubUrl: 'https://archive.org/download/anoitedosmortosvivos1968dublado/A%20Noite%20dos%20Mortos-Vivos%20%281968%29%20Dublado.mp4' },
 ];

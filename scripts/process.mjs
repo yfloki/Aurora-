@@ -1,6 +1,8 @@
 // Transcodifica e semeia APENAS os fontes já 100% baixados (sem .part).
 // Pode rodar várias vezes; pula o que já foi processado. Não baixa nada.
-// Uso: node scripts/process.mjs [slug]   (sem slug = todos os disponíveis)
+// Uso: node scripts/process.mjs [slug] [--force]
+//   (sem slug = todos os disponíveis; --force apaga o HLS existente e
+//    re-transcodifica — use para incluir faixa dublada em conteúdo antigo)
 import { register } from 'tsx/esm/api';
 register();
 
@@ -8,6 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MOVIES } from './movies.mjs';
+import { ensureDubTrack } from './dub.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const content = path.join(root, 'content');
@@ -24,7 +27,9 @@ const { transcodeToHls, generateThumbnails, extractStills } =
 const { openDb } = await import('../apps/api/src/db.ts');
 const { seedCatalog } = await import('../apps/api/src/seed.ts');
 
-const only = process.argv[2];
+const args = process.argv.slice(2);
+const force = args.includes('--force');
+const only = args.find((a) => a !== '--force');
 
 for (const movie of MOVIES) {
   if (only && movie.slug !== only) continue;
@@ -37,15 +42,16 @@ for (const movie of MOVIES) {
   const outHls = path.join(dirs.hls, movie.slug);
   const outImg = path.join(dirs.images, movie.slug);
   try {
+    if (force && fs.existsSync(outHls)) {
+      console.log(`♻ --force: apagando HLS antigo de ${movie.slug}`);
+      fs.rmSync(outHls, { recursive: true, force: true });
+    }
     if (fs.existsSync(path.join(outHls, 'master.m3u8'))) {
       console.log(`✓ já transcodificado: ${movie.slug}`);
     } else {
-      // faixa dublada opcional: content/source/<slug>.dub.m4a (gerada por make-dub.mjs
-      // no Windows). Em deploy, vem pré-gerada do repo em apps/api/seed/dubs.
-      const dub = path.join(dirs.source, `${movie.slug}.dub.m4a`);
-      const seedDub = path.join(root, 'apps', 'api', 'seed', 'dubs', `${movie.slug}.dub.m4a`);
-      if (!fs.existsSync(dub) && fs.existsSync(seedDub)) fs.copyFileSync(seedDub, dub);
-      const audioTracks = fs.existsSync(dub)
+      // dublagem de estúdio já existente (movie.dubUrl) → segunda faixa do HLS
+      const dub = await ensureDubTrack(movie, dirs.source, src);
+      const audioTracks = dub
         ? [
             { lang: 'eng', name: 'original', isDefault: true },
             { file: dub, lang: 'por', name: 'dublado' },
@@ -68,6 +74,7 @@ for (const movie of MOVIES) {
     for (const [srcName, destName] of [
       [`${movie.slug}.vtt`, 'pt-BR.vtt'],
       [`${movie.slug}.en.vtt`, 'en.vtt'],
+      [`${movie.slug}.es.vtt`, 'es.vtt'],
     ]) {
       const subSrc = path.join(root, 'apps', 'api', 'seed', 'subs', srcName);
       if (fs.existsSync(subSrc)) {

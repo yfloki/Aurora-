@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { MOVIES } from './movies.mjs';
+import { ensureDubTrack } from './dub.mjs';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const content = path.join(root, 'content');
@@ -56,8 +57,17 @@ for (const movie of MOVIES) {
     if (fs.existsSync(path.join(outHls, 'master.m3u8'))) {
       console.log(`✓ já transcodificado: ${movie.slug}`);
     } else {
-      console.log(`⚙ transcodificando ${movie.slug} (isso demora)...`);
+      // dublagem de estúdio já existente (movie.dubUrl) → segunda faixa do HLS
+      const dub = await ensureDubTrack(movie, dirs.source, src);
+      const audioTracks = dub
+        ? [
+            { lang: 'eng', name: 'original', isDefault: true },
+            { file: dub, lang: 'por', name: 'dublado' },
+          ]
+        : undefined;
+      console.log(`⚙ transcodificando ${movie.slug}${audioTracks ? ' (com faixa dublada)' : ''} (isso demora)...`);
       await transcodeToHls(src, outHls, {
+        audioTracks,
         onProgress: (p) => process.stdout.write(`\r  HLS ${p.toFixed(0)}%`),
       });
       console.log('');
@@ -65,11 +75,17 @@ for (const movie of MOVIES) {
       await extractStills(src, outImg);
     }
     // legendas de demonstração do repo → content
-    const subSrc = path.join(root, 'apps', 'api', 'seed', 'subs', `${movie.slug}.vtt`);
-    if (fs.existsSync(subSrc)) {
-      const subDir = path.join(outHls, 'subs');
-      fs.mkdirSync(subDir, { recursive: true });
-      fs.copyFileSync(subSrc, path.join(subDir, 'pt-BR.vtt'));
+    const subDir = path.join(outHls, 'subs');
+    for (const [srcName, destName] of [
+      [`${movie.slug}.vtt`, 'pt-BR.vtt'],
+      [`${movie.slug}.en.vtt`, 'en.vtt'],
+      [`${movie.slug}.es.vtt`, 'es.vtt'],
+    ]) {
+      const subSrc = path.join(root, 'apps', 'api', 'seed', 'subs', srcName);
+      if (fs.existsSync(subSrc)) {
+        fs.mkdirSync(subDir, { recursive: true });
+        fs.copyFileSync(subSrc, path.join(subDir, destName));
+      }
     }
   } catch (err) {
     console.error(`✗ falhou ${movie.slug}: ${err.message} — seguindo com os demais`);

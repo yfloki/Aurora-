@@ -34,6 +34,11 @@
     "synopsis": "Uma pastora e seu cão enfrentam espíritos ancestrais da montanha para que o ciclo da vida continue. Visualmente deslumbrante, feito inteiramente com software livre.",
     "hlsPath": "hls/spring/master.m3u8", "poster": "images/spring/poster.jpg",
     "backdrop": "images/spring/backdrop.jpg", "thumbsVtt": "hls/spring/thumbs/thumbnails.vtt",
-    "subtitles": [{ "lang": "pt-BR", "label": "Português", "path": "hls/spring/subs/pt-BR.vtt" }, { "lang": "en", "label": "English", "path": "hls/spring/subs/en.vtt" }, { "lang": "es", "label": "Español", "path": "hls/spring/subs/es.vtt" }] }
+    "subtitles": [{ "lang": "pt-BR", "label": "Português", "path": "hls/spring/subs/pt-BR.vtt" }, { "lang": "en", "label": "English", "path": "hls/spring/subs/en.vtt" }, { "lang": "es", "label": "Español", "path": "hls/spring/subs/es.vtt" }] },
+  { "slug": "night-of-the-living-dead", "name": "A Noite dos Mortos-Vivos", "year": 1968, "rating": 7.8, "durationS": 5753,
+    "genres": ["Terror", "Clássico"], "cast": ["George A. Romero (dir.)", "Duane Jones", "Judith O'Dea"],
+    "synopsis": "Sete estranhos se refugiam numa casa de fazenda na Pensilvânia enquanto os mortos voltam à vida. O clássico de Romero que inventou o zumbi moderno, em domínio público — com áudio original em inglês e dublagem clássica em português.",
+    "hlsPath": "hls/night-of-the-living-dead/master.m3u8", "poster": "images/night-of-the-living-dead/poster.jpg",
+    "backdrop": "images/night-of-the-living-dead/backdrop.jpg", "thumbsVtt": "hls/night-of-the-living-dead/thumbs/thumbnails.vtt",
+    "subtitles": [] }
 ]
-
