@@ -1,0 +1,15 @@
+{
+  "name": "aurora-plus",
+  "private": true,
+  "type": "module",
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev": "concurrently -k -n api,media,web -c magenta,yellow,cyan \"npm run dev -w apps/api\" \"npm run dev -w apps/media\" \"npm run dev -w apps/web\"",
+    "setup": "node scripts/setup.mjs",
+    "test": "npm run test -ws --if-present"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0",
+    "typescript": "^5.6.0"
+  }
+}
