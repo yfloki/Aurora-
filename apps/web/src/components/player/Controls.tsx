@@ -34,6 +34,65 @@ function Seek10Glyph({ forward = false, className = 'size-8' }:
   );
 }
 
+function BackGlyph({ className = 'size-7' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z" />
+    </svg>
+  );
+}
+
+export function VolumeGlyph({ muted, volume, className = 'size-6' }:
+  { muted: boolean; volume: number; className?: string }) {
+  if (muted || volume === 0) {
+    return (
+      <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+        <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3 3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4 9.91 6.09 12 8.18V4z" />
+      </svg>
+    );
+  }
+  if (volume < 0.5) {
+    return (
+      <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+        <path d="M5 9v6h4l5 5V4L9 9H5zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
+      </svg>
+    );
+  }
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z" />
+    </svg>
+  );
+}
+
+/** Balão de "Áudio e legendas", como o da Netflix. */
+function AudioSubsGlyph({ className = 'size-6' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM7 6h10v2H7V6zm0 4h10v2H7v-2z" />
+    </svg>
+  );
+}
+
+function FullscreenGlyph({ exit = false, className = 'size-6' }:
+  { exit?: boolean; className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d={exit
+        ? 'M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z'
+        : 'M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z'} />
+    </svg>
+  );
+}
+
+function CheckGlyph({ className = 'size-4' }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+    </svg>
+  );
+}
+
 function fmt(s: number): string {
   if (!isFinite(s) || s < 0) s = 0;
   const h = Math.floor(s / 3600);
@@ -87,8 +146,7 @@ export function Controls(props: ControlsProps) {
   const barRef = useRef<HTMLDivElement>(null);
   const [hoverPct, setHoverPct] = useState<number | null>(null);
   const [qualityOpen, setQualityOpen] = useState(false);
-  const [subsOpen, setSubsOpen] = useState(false);
-  const [audioOpen, setAudioOpen] = useState(false);
+  const [tracksOpen, setTracksOpen] = useState(false);
 
   const pct = duration > 0 ? (position / duration) * 100 : 0;
   const bufferedPct = duration > 0 ? (buffered / duration) * 100 : 0;
@@ -116,7 +174,9 @@ export function Controls(props: ControlsProps) {
       bg-gradient-to-t from-black/85 via-transparent to-black/50 transition-opacity duration-300
       ${visible ? 'opacity-100' : 'opacity-0'}`}>
       <div className="pointer-events-auto flex items-center gap-4 p-6">
-        <button onClick={onBack} aria-label="Voltar" className="text-2xl leading-none">←</button>
+        <button onClick={onBack} aria-label="Voltar" className="transition-transform hover:scale-110">
+          <BackGlyph />
+        </button>
         <div>
           <p className="font-display text-lg font-bold">{title.name}</p>
           {isLive && (
@@ -192,8 +252,9 @@ export function Controls(props: ControlsProps) {
           )}
 
           <div className="group/vol flex items-center gap-2">
-            <button onClick={onToggleMute} aria-label={muted ? 'Ativar som' : 'Mudo'} className="text-lg leading-none">
-              {muted || volume === 0 ? '🔇' : '🔊'}
+            <button onClick={onToggleMute} aria-label={muted ? 'Ativar som' : 'Mudo'}
+              className="transition-transform hover:scale-110">
+              <VolumeGlyph muted={muted} volume={volume} />
             </button>
             <input
               type="range" min={0} max={1} step={0.05} value={muted ? 0 : volume}
@@ -208,56 +269,56 @@ export function Controls(props: ControlsProps) {
           )}
 
           <div className="ml-auto flex items-center gap-4">
-            {audioTracks.length > 1 && (
+            {(audioTracks.length > 0 || title.subtitles.length > 0) && (
               <div className="relative">
                 <button
-                  onClick={() => { setAudioOpen((v) => !v); setSubsOpen(false); setQualityOpen(false); }}
-                  aria-label="Áudio" className="text-lg leading-none"
+                  onClick={() => { setTracksOpen((v) => !v); setQualityOpen(false); }}
+                  aria-label="Áudio e legendas" className="transition-transform hover:scale-110"
                 >
-                  🎧
+                  <AudioSubsGlyph />
                 </button>
-                {audioOpen && (
-                  <div className="glass absolute bottom-8 right-0 min-w-44 rounded-lg p-2 text-sm">
-                    <p className="px-3 py-1 text-xs text-muted">Áudio</p>
-                    {audioTracks.map((t) => (
-                      <button
-                        key={t.id}
-                        onClick={() => { onSetAudio(t.id); setAudioOpen(false); }}
-                        className={`block w-full rounded px-3 py-1.5 text-left hover:bg-white/10 ${currentAudio === t.id ? 'text-(--accent2)' : ''}`}
-                      >
-                        {t.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {title.subtitles.length > 0 && (
-              <div className="relative">
-                <button
-                  onClick={() => { setSubsOpen((v) => !v); setQualityOpen(false); setAudioOpen(false); }}
-                  aria-label="Legendas" className="text-lg leading-none"
-                >
-                  💬
-                </button>
-                {subsOpen && (
-                  <div className="glass absolute bottom-8 right-0 min-w-36 rounded-lg p-2 text-sm">
-                    <button
-                      onClick={() => { onSetSubtitle(null); setSubsOpen(false); }}
-                      className={`block w-full rounded px-3 py-1.5 text-left hover:bg-white/10 ${!activeSubtitle ? 'text-(--accent2)' : ''}`}
-                    >
-                      Desligadas
-                    </button>
-                    {title.subtitles.map((s) => (
-                      <button
-                        key={s.lang}
-                        onClick={() => { onSetSubtitle(s.lang); setSubsOpen(false); }}
-                        className={`block w-full rounded px-3 py-1.5 text-left hover:bg-white/10 ${activeSubtitle === s.lang ? 'text-(--accent2)' : ''}`}
-                      >
-                        {s.label}
-                      </button>
-                    ))}
+                {tracksOpen && (
+                  <div className="glass absolute bottom-10 right-0 flex gap-6 rounded-lg px-5 py-4 text-sm">
+                    {audioTracks.length > 0 && (
+                      <div className="min-w-44">
+                        <p className="mb-2 px-2 text-base font-semibold">Áudio</p>
+                        {audioTracks.map((t) => (
+                          <button
+                            key={t.id}
+                            onClick={() => { onSetAudio(t.id); setTracksOpen(false); }}
+                            className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-left hover:bg-white/10
+                              ${currentAudio === t.id ? 'font-semibold' : 'text-muted'}`}
+                          >
+                            <span className="w-4">{currentAudio === t.id && <CheckGlyph />}</span>
+                            {t.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {title.subtitles.length > 0 && (
+                      <div className="min-w-40">
+                        <p className="mb-2 px-2 text-base font-semibold">Legendas</p>
+                        <button
+                          onClick={() => { onSetSubtitle(null); setTracksOpen(false); }}
+                          className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-left hover:bg-white/10
+                            ${!activeSubtitle ? 'font-semibold' : 'text-muted'}`}
+                        >
+                          <span className="w-4">{!activeSubtitle && <CheckGlyph />}</span>
+                          Desligadas
+                        </button>
+                        {title.subtitles.map((s) => (
+                          <button
+                            key={s.lang}
+                            onClick={() => { onSetSubtitle(s.lang); setTracksOpen(false); }}
+                            className={`flex w-full items-center gap-2 rounded px-2 py-1.5 text-left hover:bg-white/10
+                              ${activeSubtitle === s.lang ? 'font-semibold' : 'text-muted'}`}
+                          >
+                            <span className="w-4">{activeSubtitle === s.lang && <CheckGlyph />}</span>
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -266,7 +327,7 @@ export function Controls(props: ControlsProps) {
             {levels.length > 1 && (
               <div className="relative">
                 <button
-                  onClick={() => { setQualityOpen((v) => !v); setSubsOpen(false); }}
+                  onClick={() => { setQualityOpen((v) => !v); setTracksOpen(false); }}
                   className="text-sm font-semibold"
                 >
                   {qualityLabel}
@@ -293,8 +354,9 @@ export function Controls(props: ControlsProps) {
               </div>
             )}
 
-            <button onClick={onToggleFullscreen} aria-label="Tela cheia" className="text-lg leading-none">
-              {fullscreen ? '⤢' : '⛶'}
+            <button onClick={onToggleFullscreen} aria-label="Tela cheia"
+              className="transition-transform hover:scale-110">
+              <FullscreenGlyph exit={fullscreen} />
             </button>
           </div>
         </div>

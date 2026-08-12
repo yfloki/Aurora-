@@ -5,7 +5,7 @@ import type { Title } from '@aurora/shared';
 import { mediaUrl } from '@/lib/config';
 import { putProgress } from '@/lib/api';
 import { usePlayer } from './usePlayer';
-import { Controls } from './Controls';
+import { Controls, VolumeGlyph } from './Controls';
 import { parseThumbsVtt, type ThumbCue } from './ThumbStrip';
 import { useHlsStats, applyThrottle } from './useHlsStats';
 import { StatsPanel } from './StatsPanel';
@@ -192,8 +192,8 @@ export function Player({ title, profileId, startPositionS = 0, isLive = false }:
 
       {playing && muted && (
         <button onClick={toggleMute}
-          className="glass absolute bottom-28 left-6 z-50 rounded-full px-5 py-2.5 text-sm font-semibold">
-          🔊 Ativar som
+          className="glass absolute bottom-28 left-6 z-50 flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold">
+          <VolumeGlyph muted={false} volume={1} className="size-4" /> Ativar som
         </button>
       )}
 

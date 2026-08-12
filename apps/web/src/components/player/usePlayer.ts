@@ -14,16 +14,25 @@ export interface AudioTrackInfo {
   label: string;
 }
 
+// Nomes de idioma no idioma da interface (pt-BR), como a Netflix faz.
 const AUDIO_LANG_LABELS: Record<string, string> = {
-  por: 'Português (dublado)', pt: 'Português (dublado)',
-  eng: 'Inglês (original)', en: 'Inglês (original)',
-  und: 'Áudio original',
+  por: 'Português (Brasil)', pt: 'Português (Brasil)',
+  eng: 'Inglês', en: 'Inglês',
+  spa: 'Espanhol', es: 'Espanhol',
+  deu: 'Alemão', de: 'Alemão',
+  tur: 'Turco', tr: 'Turco',
+  fra: 'Francês', fr: 'Francês',
+  ita: 'Italiano', it: 'Italiano',
+  jpn: 'Japonês', ja: 'Japonês',
+  kor: 'Coreano', ko: 'Coreano',
+  und: 'Original',
 };
 
-function audioLabel(name: string | undefined, lang: string | undefined, idx: number): string {
-  if (lang && AUDIO_LANG_LABELS[lang]) return AUDIO_LANG_LABELS[lang];
-  if (name) return name.replace(/[-_]/g, ' ');
-  return `Faixa ${idx + 1}`;
+function audioLabel(name: string | undefined, lang: string | undefined,
+  idx: number, original = false): string {
+  const base = (lang && AUDIO_LANG_LABELS[lang])
+    ?? (name && !/^audio[_ ]?\d+$/i.test(name) ? name.replace(/[-_]/g, ' ') : `Faixa ${idx + 1}`);
+  return original ? `${base} [Original]` : base;
 }
 
 export function usePlayer(src: string | null, startPositionS = 0) {
@@ -80,7 +89,7 @@ export function usePlayer(src: string | null, startPositionS = 0) {
       hls.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => setAutoLevel(data.level));
       hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, () => {
         setAudioTracks(hls.audioTracks.map((t, i) => ({
-          id: i, lang: t.lang ?? '', label: audioLabel(t.name, t.lang, i),
+          id: i, lang: t.lang ?? '', label: audioLabel(t.name, t.lang, i, !!t.default),
         })));
         setCurrentAudio(hls.audioTrack);
       });
