@@ -36,7 +36,7 @@ export function Player({ title, profileId, startPositionS = 0, isLive = false }:
   const [fullscreen, setFullscreen] = useState(false);
   const [thumbCues, setThumbCues] = useState<ThumbCue[]>([]);
   const [activeSubtitle, setActiveSubtitle] = useState<string | null>(null);
-  const hideTimer = useRef<ReturnType<typeof setTimeout>>();
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const lastSaved = useRef(0);
 
   useEffect(() => {

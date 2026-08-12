@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 export function SearchBox() {
   const router = useRouter();
   const [value, setValue] = useState('');
-  const timer = useRef<ReturnType<typeof setTimeout>>();
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     if (timer.current) clearTimeout(timer.current);
