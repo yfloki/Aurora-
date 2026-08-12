@@ -36,7 +36,7 @@ function LoginInner() {
       <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
         className="glass relative z-10 w-full max-w-md rounded-2xl p-8">
         <h1 className="mb-1 flex justify-center">
-          <img src="/logo.png" alt="AURORA+" className="h-16 w-auto mix-blend-screen" />
+          <img src="/logo.png" alt="AURORA+" className="h-16 w-auto" />
         </h1>
         <p className="mb-8 text-center text-sm text-muted">
           {mode === 'login' ? 'Bom te ver de novo.' : 'Crie sua conta para começar a assistir.'}
