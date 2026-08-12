@@ -8,7 +8,7 @@
   ],
   "scripts": {
     "dev": "concurrently -k -n api,media,web -c magenta,yellow,cyan \"npm run dev -w apps/api\" \"npm run dev -w apps/media\" \"npm run dev -w apps/web\"",
-    "setup": "node scripts/setup.mjs",
+    "setup": "node scripts/download.mjs && node scripts/process.mjs",
     "test": "npm run test -ws --if-present"
   },
   "devDependencies": {

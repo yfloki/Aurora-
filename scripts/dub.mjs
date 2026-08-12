@@ -2,8 +2,8 @@
 // (ex.: dublagem clássica de estúdio em domínio público no archive.org).
 // Baixa o vídeo dublado (movie.dubUrl), estima o desalinhamento em relação ao
 // corte original comparando os padrões de silêncio das duas trilhas, e extrai
-// o áudio alinhado para content/source/<slug>.dub.m4a — que setup.mjs e
-// process.mjs muxam como segunda faixa do HLS (por/dublado).
+// o áudio alinhado para content/source/<slug>.dub.m4a — que process.mjs
+// muxa como segunda faixa do HLS (por).
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
