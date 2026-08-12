@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import { useProfile } from '@/lib/profile';
 import { AvatarBadge } from './AvatarBadge';
-// import { SearchBox } from './SearchBox'; // Task 14
+import { SearchBox } from './SearchBox';
 
 export function Header() {
   const { profile } = useProfile();
@@ -12,7 +12,7 @@ export function Header() {
         AURORA<span className="text-gradient">+</span>
       </Link>
       <div className="ml-auto flex items-center gap-4">
-        {/* <SearchBox /> Task 14 */}
+        <SearchBox />
         <Link href="/admin" className="text-sm text-muted hover:text-fg">Estúdio</Link>
         {profile && (
           <Link href="/profiles" title="Trocar perfil">
