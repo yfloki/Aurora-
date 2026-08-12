@@ -29,6 +29,14 @@ export async function probeDuration(input: string): Promise<number> {
   return parseFloat(stdout.trim());
 }
 
+async function probeHeight(input: string): Promise<number> {
+  const { stdout } = await execFileP(ffprobePath, [
+    '-v', 'error', '-select_streams', 'v:0',
+    '-show_entries', 'stream=height', '-of', 'csv=p=0', input,
+  ]);
+  return parseInt(stdout.trim(), 10) || 0;
+}
+
 function parseTimeToSeconds(t: string): number {
   const [h, m, s] = t.split(':');
   return Number(h) * 3600 + Number(m) * 60 + parseFloat(s);
@@ -43,7 +51,11 @@ export async function transcodeToHls(
     audioTracks?: AudioTrackSpec[];
   } = {},
 ): Promise<void> {
-  const ladder = opts.ladder ?? DEFAULT_LADDER;
+  // não gera renditions acima da resolução da fonte (upscale só desperdiça)
+  const srcHeight = await probeHeight(input);
+  const fullLadder = opts.ladder ?? DEFAULT_LADDER;
+  const fitted = srcHeight > 0 ? fullLadder.filter((r) => r.height <= srcHeight) : fullLadder;
+  const ladder = fitted.length ? fitted : [fullLadder[fullLadder.length - 1]];
   const audio = opts.audioTracks && opts.audioTracks.length >= 2 ? opts.audioTracks : null;
   fs.mkdirSync(outDir, { recursive: true });
   const duration = await probeDuration(input);

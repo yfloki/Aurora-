@@ -17,11 +17,21 @@ function run(bin, args) {
   });
 }
 
-async function download(url, dest) {
+async function download(url, dest, attempt = 1) {
+  const MAX = 4;
   if (fs.existsSync(dest)) { console.log(`  ✓ já baixado: ${path.basename(dest)}`); return; }
-  console.log(`  ↓ baixando versão dublada: ${url}`);
-  const res = await fetch(url, { redirect: 'follow' });
-  if (!res.ok) throw new Error(`HTTP ${res.status} em ${url}`);
+  console.log(`  ↓ baixando versão dublada: ${url}${attempt > 1 ? ` (tentativa ${attempt}/${MAX})` : ''}`);
+  let res;
+  try {
+    res = await fetch(url, { redirect: 'follow' });
+    if (!res.ok) throw new Error(`HTTP ${res.status} em ${url}`);
+  } catch (err) {
+    if (attempt >= MAX) throw err;
+    const waitS = attempt * 15;
+    console.log(`  ⚠ ${err.message} — nova tentativa em ${waitS}s`);
+    await new Promise((r) => setTimeout(r, waitS * 1000));
+    return download(url, dest, attempt + 1);
+  }
   const tmp = dest + '.part';
   const file = fs.createWriteStream(tmp);
   const total = Number(res.headers.get('content-length') ?? 0);
@@ -79,10 +89,21 @@ function estimateOffset(origStarts, dubStarts) {
  */
 export async function ensureDubTrack(movie, sourceDir, origSrc) {
   const out = path.join(sourceDir, `${movie.slug}.dub.m4a`);
-  if (fs.existsSync(out)) return out;
-  if (!movie.dubUrl) return null;
+  if (!movie.dubUrl) return fs.existsSync(out) ? out : null;
 
   const { ffmpegPath, ffprobePath } = await import('../apps/api/src/ffbin.ts');
+
+  // valida m4a deixado por execuções anteriores — extração interrompida
+  // deixa arquivo truncado (sem moov) que quebraria a transcodificação
+  if (fs.existsSync(out)) {
+    try {
+      await probeDuration(ffprobePath, out);
+      return out;
+    } catch {
+      console.warn(`  ⚠ ${path.basename(out)} corrompido (extração interrompida?) — regenerando`);
+      fs.rmSync(out, { force: true });
+    }
+  }
   const dubExt = path.extname(new URL(movie.dubUrl).pathname) || '.mp4';
   const dubSrc = path.join(sourceDir, `${movie.slug}.dub-src${dubExt}`);
   await download(movie.dubUrl, dubSrc);
@@ -113,8 +134,11 @@ export async function ensureDubTrack(movie, sourceDir, origSrc) {
     const ms = Math.round(-offset * 1000);
     args.push('-af', `adelay=${ms}|${ms}`);
   }
-  args.push('-c:a', 'aac', '-b:a', '160k', '-t', String(Math.ceil(origDur + 1)), out);
+  // grava em .part e renomeia — interrupção não deixa m4a truncado com nome final
+  const tmpOut = out + '.part.m4a';
+  args.push('-c:a', 'aac', '-b:a', '160k', '-t', String(Math.ceil(origDur + 1)), '-f', 'mp4', tmpOut);
   await run(ffmpegPath, args);
+  fs.renameSync(tmpOut, out);
 
   const outDur = await probeDuration(ffprobePath, out);
   if (Math.abs(outDur - origDur) > 5) {

@@ -10,11 +10,22 @@ const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const sourceDir = path.join(root, 'content', 'source');
 fs.mkdirSync(sourceDir, { recursive: true });
 
-async function download(url, dest) {
+async function download(url, dest, attempt = 1) {
+  const MAX = 4;
   if (fs.existsSync(dest)) { console.log(`✓ já baixado: ${path.basename(dest)}`); return; }
-  console.log(`↓ baixando ${url}`);
-  const res = await fetch(url, { redirect: 'follow' });
-  if (!res.ok) throw new Error(`HTTP ${res.status} em ${url}`);
+  console.log(`↓ baixando ${url}${attempt > 1 ? ` (tentativa ${attempt}/${MAX})` : ''}`);
+  let res;
+  try {
+    res = await fetch(url, { redirect: 'follow' });
+    if (!res.ok) throw new Error(`HTTP ${res.status} em ${url}`);
+  } catch (err) {
+    // archive.org devolve 500/503 esporádicos — espera e tenta de novo
+    if (attempt >= MAX) throw err;
+    const waitS = attempt * 15;
+    console.log(`  ⚠ ${err.message} — nova tentativa em ${waitS}s`);
+    await new Promise((r) => setTimeout(r, waitS * 1000));
+    return download(url, dest, attempt + 1);
+  }
   const tmp = dest + '.part';
   const file = fs.createWriteStream(tmp);
   const total = Number(res.headers.get('content-length') ?? 0);
