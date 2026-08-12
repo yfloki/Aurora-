@@ -3,8 +3,11 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { getMe, type User } from './api';
 
-/** Redireciona para /login se não houver sessão. Retorna o usuário quando logado. */
-export function useAuthGuard() {
+/**
+ * Verifica a sessão. Por padrão redireciona para /login quando deslogado;
+ * com `redirect=false` apenas informa (para a home mostrar a landing).
+ */
+export function useAuthGuard(redirect: boolean = true) {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [checking, setChecking] = useState(true);
@@ -12,9 +15,9 @@ export function useAuthGuard() {
   useEffect(() => {
     getMe()
       .then(setUser)
-      .catch(() => router.replace('/login'))
+      .catch(() => { if (redirect) router.replace('/login'); })
       .finally(() => setChecking(false));
-  }, [router]);
+  }, [router, redirect]);
 
   return { user, checking };
 }

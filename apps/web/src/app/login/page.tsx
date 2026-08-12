@@ -1,14 +1,16 @@
 'use client';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { login, register } from '@/lib/api';
 
-export default function LoginPage() {
+function LoginInner() {
   const router = useRouter();
-  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const params = useSearchParams();
+  const [mode, setMode] = useState<'login' | 'register'>(
+    params.get('mode') === 'register' ? 'register' : 'login');
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(params.get('email') ?? '');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -76,5 +78,13 @@ export default function LoginPage() {
         </p>
       </motion.div>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<main className="grid min-h-screen place-items-center text-muted">Carregando…</main>}>
+      <LoginInner />
+    </Suspense>
   );
 }

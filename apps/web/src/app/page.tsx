@@ -9,15 +9,23 @@ import { Header } from '@/components/Header';
 import { Hero } from '@/components/Hero';
 import { Row } from '@/components/Row';
 import { TitleCard } from '@/components/TitleCard';
+import { Landing } from '@/components/Landing';
 
 export default function Home() {
   const router = useRouter();
-  const { checking } = useAuthGuard();
+  const { user, checking } = useAuthGuard(false);
   const { profile, ready } = useProfile();
   const { titles, progress, myList, live, loading, refreshMyList } = useHomeData();
 
-  useEffect(() => { if (ready && !profile) router.replace('/profiles'); }, [ready, profile, router]);
-  if (checking || !ready || !profile || loading) {
+  useEffect(() => {
+    if (user && ready && !profile) router.replace('/profiles');
+  }, [user, ready, profile, router]);
+
+  if (checking) {
+    return <main className="grid min-h-screen place-items-center text-muted">Carregando…</main>;
+  }
+  if (!user) return <Landing />;
+  if (!ready || !profile || loading) {
     return <main className="grid min-h-screen place-items-center text-muted">Carregando…</main>;
   }
 
