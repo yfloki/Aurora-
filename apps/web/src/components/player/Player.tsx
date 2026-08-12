@@ -6,6 +6,7 @@ import { mediaUrl } from '@/lib/config';
 import { putProgress } from '@/lib/api';
 import { usePlayer } from './usePlayer';
 import { Controls, VolumeGlyph } from './Controls';
+import { BrandIntro } from './BrandIntro';
 import { parseThumbsVtt, type ThumbCue } from './ThumbStrip';
 import { useHlsStats, applyThrottle } from './useHlsStats';
 import { StatsPanel } from './StatsPanel';
@@ -17,12 +18,16 @@ export function Player({ title, profileId, startPositionS = 0, isLive = false }:
   const containerRef = useRef<HTMLDivElement>(null);
   const src = title.hlsPath ? mediaUrl(title.hlsPath) : null;
 
+  // vinheta da marca antes do conteúdo (só quando começa do zero — retomar
+  // de onde parou pula direto pro filme); autoplay travado até ela acabar
+  const [introDone, setIntroDone] = useState(startPositionS > 0);
+
   const {
     videoRef, hlsRef, playing, position, duration, buffered, volume, muted,
-    togglePlay, seek, seekBy, setVolume, toggleMute,
+    togglePlay, seek, seekBy, setVolume, toggleMute, play,
     levels, currentLevel, autoLevel, setLevel,
     audioTracks, currentAudio, setAudioTrack, ready, error, retry,
-  } = usePlayer(src, startPositionS);
+  } = usePlayer(src, startPositionS, introDone);
 
   const [showStats, setShowStats] = useState(false);
   const [throttleBps, setThrottleBps] = useState<number | null>(null);
@@ -164,6 +169,10 @@ export function Player({ title, profileId, startPositionS = 0, isLive = false }:
           <track key={s.lang} kind="subtitles" srcLang={s.lang} label={s.label} src={mediaUrl(s.path)} />
         ))}
       </video>
+
+      {!introDone && !error && (
+        <BrandIntro onDone={() => { setIntroDone(true); play(); }} />
+      )}
 
       {!ready && !error && (
         <div className="pointer-events-none absolute inset-0 grid place-items-center">

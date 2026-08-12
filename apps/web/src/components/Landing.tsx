@@ -90,9 +90,7 @@ export function Landing() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,var(--bg)_90%)]" />
 
         <header className="relative z-10 flex items-center justify-between px-8 py-5 md:px-16">
-          <span className="font-display text-3xl font-extrabold">
-            AURORA<span className="text-gradient">+</span>
-          </span>
+          <img src="/logo.png" alt="AURORA+" className="h-12 w-auto mix-blend-screen" />
           <Link href="/login"
             className="rounded-lg bg-gradient-to-r from-(--accent) to-(--accent2) px-5 py-2 font-semibold">
             Entrar

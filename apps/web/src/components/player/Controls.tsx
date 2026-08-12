@@ -145,6 +145,7 @@ export function Controls(props: ControlsProps) {
 
   const barRef = useRef<HTMLDivElement>(null);
   const [hoverPct, setHoverPct] = useState<number | null>(null);
+  const [scrubbing, setScrubbing] = useState(false);
   const [qualityOpen, setQualityOpen] = useState(false);
   const [tracksOpen, setTracksOpen] = useState(false);
 
@@ -215,9 +216,23 @@ export function Controls(props: ControlsProps) {
             )}
             <div
               ref={barRef}
-              onMouseMove={(e) => setHoverPct(pctFromEvent(e))}
-              onMouseLeave={() => setHoverPct(null)}
-              onClick={(e) => onSeek((pctFromEvent(e) / 100) * duration)}
+              // arrasto com pointer capture: segura e arrasta como na Netflix
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.currentTarget.setPointerCapture(e.pointerId);
+                setScrubbing(true);
+                onSeek((pctFromEvent(e) / 100) * duration);
+              }}
+              onPointerMove={(e) => {
+                setHoverPct(pctFromEvent(e));
+                if (scrubbing) onSeek((pctFromEvent(e) / 100) * duration);
+              }}
+              onPointerUp={(e) => {
+                setScrubbing(false);
+                e.currentTarget.releasePointerCapture(e.pointerId);
+              }}
+              onMouseLeave={() => { if (!scrubbing) setHoverPct(null); }}
+              style={{ touchAction: 'none' }}
               className="group relative h-1.5 w-full cursor-pointer rounded-full bg-white/20 transition-all hover:h-2.5"
             >
               <div className="absolute inset-y-0 left-0 rounded-full bg-white/30" style={{ width: `${bufferedPct}%` }} />

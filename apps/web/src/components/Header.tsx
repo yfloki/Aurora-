@@ -16,8 +16,9 @@ export function Header() {
   };
   return (
     <header className="glass fixed inset-x-0 top-0 z-40 flex items-center gap-6 px-8 py-3">
-      <Link href="/" className="font-display text-2xl font-extrabold">
-        AURORA<span className="text-gradient">+</span>
+      <Link href="/" className="shrink-0">
+        {/* mix-blend-screen: o fundo escuro da arte some sobre o tema dark */}
+        <img src="/logo.png" alt="AURORA+" className="h-9 w-auto mix-blend-screen" />
       </Link>
       <div className="ml-auto flex items-center gap-4">
         <SearchBox />

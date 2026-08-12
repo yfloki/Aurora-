@@ -35,10 +35,13 @@ function audioLabel(name: string | undefined, lang: string | undefined,
   return original ? `${base} [Original]` : base;
 }
 
-export function usePlayer(src: string | null, startPositionS = 0) {
+export function usePlayer(src: string | null, startPositionS = 0, autoplay = true) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
   const fatalErrorCount = useRef(0);
+  // lido na hora do manifest sem recriar o hls quando a vinheta termina
+  const autoplayRef = useRef(autoplay);
+  useEffect(() => { autoplayRef.current = autoplay; }, [autoplay]);
 
   const [levels, setLevels] = useState<QualityLevel[]>([]);
   const [currentLevel, setCurrentLevel] = useState(-1); // -1 = auto
@@ -80,11 +83,13 @@ export function usePlayer(src: string | null, startPositionS = 0) {
         setReady(true);
         if (startPositionS > 0) video.currentTime = startPositionS;
         // autoplay: tenta com som; se o navegador bloquear, entra mudo
-        // (o Player mostra o chip "Ativar som")
-        video.play().catch(() => {
-          video.muted = true;
-          video.play().catch(() => {});
-        });
+        // (o Player mostra o chip "Ativar som"). Segura enquanto a vinheta roda.
+        if (autoplayRef.current) {
+          video.play().catch(() => {
+            video.muted = true;
+            video.play().catch(() => {});
+          });
+        }
       });
       hls.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => setAutoLevel(data.level));
       hls.on(Hls.Events.AUDIO_TRACKS_UPDATED, () => {
@@ -126,10 +131,12 @@ export function usePlayer(src: string | null, startPositionS = 0) {
       const onLoaded = () => {
         setReady(true);
         if (startPositionS > 0) video.currentTime = startPositionS;
-        video.play().catch(() => {
-          video.muted = true;
-          video.play().catch(() => {});
-        });
+        if (autoplayRef.current) {
+          video.play().catch(() => {
+            video.muted = true;
+            video.play().catch(() => {});
+          });
+        }
       };
       video.addEventListener('loadedmetadata', onLoaded);
       return () => video.removeEventListener('loadedmetadata', onLoaded);

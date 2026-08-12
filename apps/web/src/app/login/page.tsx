@@ -35,8 +35,8 @@ function LoginInner() {
       <div className="absolute inset-0 bg-gradient-to-br from-(--accent)/25 via-(--bg) to-(--accent2)/15" />
       <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
         className="glass relative z-10 w-full max-w-md rounded-2xl p-8">
-        <h1 className="font-display mb-1 text-center text-4xl font-extrabold">
-          AURORA<span className="text-gradient">+</span>
+        <h1 className="mb-1 flex justify-center">
+          <img src="/logo.png" alt="AURORA+" className="h-16 w-auto mix-blend-screen" />
         </h1>
         <p className="mb-8 text-center text-sm text-muted">
           {mode === 'login' ? 'Bom te ver de novo.' : 'Crie sua conta para começar a assistir.'}
