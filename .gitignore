@@ -5,7 +5,4 @@ content/
 .env
 .env.*
 !.env.example
-.claude-flow/
-.swarm/
-ruvector.db
 *.log
