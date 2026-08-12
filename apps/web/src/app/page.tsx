@@ -2,6 +2,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProfile } from '@/lib/profile';
+import { useAuthGuard } from '@/lib/useAuthGuard';
 import { useHomeData, buildRows } from '@/lib/useHomeData';
 import { toggleMyList } from '@/lib/api';
 import { Header } from '@/components/Header';
@@ -11,11 +12,12 @@ import { TitleCard } from '@/components/TitleCard';
 
 export default function Home() {
   const router = useRouter();
+  const { checking } = useAuthGuard();
   const { profile, ready } = useProfile();
   const { titles, progress, myList, live, loading, refreshMyList } = useHomeData();
 
   useEffect(() => { if (ready && !profile) router.replace('/profiles'); }, [ready, profile, router]);
-  if (!ready || !profile || loading) {
+  if (checking || !ready || !profile || loading) {
     return <main className="grid min-h-screen place-items-center text-muted">Carregando…</main>;
   }
 

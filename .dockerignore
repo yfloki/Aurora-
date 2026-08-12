@@ -1,0 +1,14 @@
+node_modules
+**/node_modules
+.next
+**/.next
+content
+.git
+docs
+*.log
+.env
+.env.*
+!.env.example
+.claude-flow
+.swarm
+ruvector.db

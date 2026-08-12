@@ -82,8 +82,8 @@ const seedJson = JSON.parse(
   fs.readFileSync(path.join(root, 'apps', 'api', 'seed', 'titles.json'), 'utf8')
     .replace(/^﻿/, ''));
 const inContent = (rel) => rel && fs.existsSync(path.join(content, rel)) ? rel : null;
-const db = openDb(path.join(dirs.db, 'app.db'));
-seedCatalog(db, seedJson.map((e) => ({
+const db = await openDb(path.join(dirs.db, 'pg'));
+await seedCatalog(db, seedJson.map((e) => ({
   ...e,
   hlsPath: inContent(e.hlsPath),
   poster: inContent(e.poster),
@@ -93,3 +93,4 @@ seedCatalog(db, seedJson.map((e) => ({
 })));
 const ready = seedJson.filter((e) => inContent(e.hlsPath)).map((e) => e.slug);
 console.log(`\n✔ catálogo atualizado — com vídeo: ${ready.join(', ') || '(nenhum ainda)'}`);
+process.exit(0);

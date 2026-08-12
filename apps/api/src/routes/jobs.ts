@@ -5,17 +5,20 @@ import type { JobQueue } from '../jobs';
 export function createJobsRouter(db: Db, queue: JobQueue) {
   const r = Router();
 
-  r.get('/', (_req, res) => {
-    const rows = db.prepare(`SELECT * FROM jobs ORDER BY created_at DESC`).all() as any[];
-    res.json(rows.map((x) => ({
+  r.get('/', async (_req, res) => {
+    const result = await db.query(`SELECT * FROM jobs ORDER BY created_at DESC`);
+    res.json(result.rows.map((x) => ({
       id: x.id, titleId: x.title_id, titleName: x.title_name,
-      status: x.status, progress: x.progress, error: x.error, createdAt: x.created_at,
+      status: x.status, progress: x.progress, error: x.error,
+      createdAt: new Date(x.created_at).toISOString(),
     })));
   });
 
-  r.post('/:id/retry', (req, res) => {
-    db.prepare(`UPDATE jobs SET status='pending', progress=0, error=NULL WHERE id=? AND status='error'`)
-      .run(req.params.id);
+  r.post('/:id/retry', async (req, res) => {
+    await db.query(
+      `UPDATE jobs SET status='pending', progress=0, error=NULL WHERE id=$1 AND status='error'`,
+      [req.params.id],
+    );
     res.status(204).end();
   });
 

@@ -5,10 +5,12 @@ import { motion } from 'framer-motion';
 import type { Profile } from '@aurora/shared';
 import { getProfiles, createProfile } from '@/lib/api';
 import { useProfile } from '@/lib/profile';
+import { useAuthGuard } from '@/lib/useAuthGuard';
 import { AvatarBadge, AVATAR_KEYS } from '@/components/AvatarBadge';
 
 export default function ProfilesPage() {
   const router = useRouter();
+  const { checking } = useAuthGuard();
   const { setProfile } = useProfile();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [creating, setCreating] = useState(false);
@@ -16,9 +18,15 @@ export default function ProfilesPage() {
   const [avatar, setAvatar] = useState(AVATAR_KEYS[0]);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => { getProfiles().then(setProfiles).catch(() => {}); }, []);
+  useEffect(() => {
+    if (!checking) getProfiles().then(setProfiles).catch(() => {});
+  }, [checking]);
 
   const pick = (p: Profile) => { setProfile(p); router.push('/'); };
+
+  if (checking) {
+    return <main className="grid min-h-screen place-items-center text-muted">Carregando…</main>;
+  }
 
   return (
     <main className="grid min-h-screen place-items-center">

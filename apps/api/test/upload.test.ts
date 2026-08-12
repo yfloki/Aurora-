@@ -4,19 +4,19 @@ import request from 'supertest';
 import { mkdtempSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { openDb, type Db } from '../src/db';
+import { openTestDb, type Db } from '../src/db';
 import { createUploadRouter } from '../src/routes/upload';
 import { slugify } from '../src/slug';
 
 let db: Db; let app: express.Express; let enqueue: any;
 
-beforeEach(() => {
-  db = openDb(':memory:');
-  enqueue = vi.fn(() => ({ id: 'j1', status: 'pending' }));
+beforeEach(async () => {
+  db = await openTestDb();
+  enqueue = vi.fn(async () => ({ id: 'j1', status: 'pending' }));
   const sourceDir = mkdtempSync(path.join(tmpdir(), 'aurora-up-'));
   const router = createUploadRouter(db, { enqueue } as any, {
     sourceDir,
-    validate: vi.fn(async () => 120), // "ffprobe" ok: 120s
+    validate: vi.fn(async () => 120),
   });
   app = express().use('/api/upload', router);
 });

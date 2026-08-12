@@ -38,18 +38,20 @@ export function createUploadRouter(db: Db, queue: Pick<JobQueue, 'enqueue'>, opt
       return res.status(400).json({ error: 'arquivo não é um vídeo válido' });
     }
 
-    const slug = uniqueSlug(slugify(name), (s) =>
-      !!db.prepare(`SELECT 1 FROM titles WHERE slug = ?`).get(s));
+    const taken = new Set(
+      (await db.query(`SELECT slug FROM titles`)).rows.map((x) => x.slug as string));
+    const slug = uniqueSlug(slugify(name), (s) => taken.has(s));
     const id = nanoid(10);
     const genres = String(req.body?.genres ?? '')
       .split(',').map((g: string) => g.trim()).filter(Boolean);
-    db.prepare(`
-      INSERT INTO titles (id, slug, name, synopsis, year, genres, status)
-      VALUES (?, ?, ?, ?, ?, ?, 'processing')`)
-      .run(id, slug, name, String(req.body?.synopsis ?? ''),
-           parseInt(req.body?.year ?? '0', 10) || 0, JSON.stringify(genres));
-    const job = queue.enqueue({ titleId: id, titleName: name, sourcePath: req.file.path });
-    const title = rowToTitle(db.prepare(`SELECT * FROM titles WHERE id = ?`).get(id));
+    await db.query(
+      `INSERT INTO titles (id, slug, name, synopsis, year, genres, status)
+       VALUES ($1, $2, $3, $4, $5, $6, 'processing')`,
+      [id, slug, name, String(req.body?.synopsis ?? ''),
+       parseInt(req.body?.year ?? '0', 10) || 0, JSON.stringify(genres)],
+    );
+    const job = await queue.enqueue({ titleId: id, titleName: name, sourcePath: req.file.path });
+    const title = rowToTitle((await db.query(`SELECT * FROM titles WHERE id = $1`, [id])).rows[0]);
     res.status(201).json({ title, job });
   });
 

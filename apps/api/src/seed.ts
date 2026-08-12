@@ -8,26 +8,23 @@ export interface SeedEntry {
   thumbsVtt: string | null; subtitles: { lang: string; label: string; path: string }[];
 }
 
-export function seedCatalog(db: Db, entries: SeedEntry[]) {
-  const insert = db.prepare(`
-    INSERT INTO titles (id, slug, name, synopsis, year, genres, cast, rating,
-      duration_s, kind, status, hls_path, poster, backdrop, thumbs_vtt, subtitles)
-    VALUES (@id, @slug, @name, @synopsis, @year, @genres, @cast, @rating,
-      @durationS, 'vod', 'ready', @hlsPath, @poster, @backdrop, @thumbsVtt, @subtitles)
-    ON CONFLICT(slug) DO UPDATE SET
-      name=excluded.name, synopsis=excluded.synopsis, year=excluded.year,
-      genres=excluded.genres, cast=excluded.cast, rating=excluded.rating,
-      duration_s=excluded.duration_s, hls_path=excluded.hls_path,
-      poster=excluded.poster, backdrop=excluded.backdrop,
-      thumbs_vtt=excluded.thumbs_vtt, subtitles=excluded.subtitles`);
-  const tx = db.transaction((all: SeedEntry[]) => {
-    for (const e of all) {
-      insert.run({
-        id: nanoid(10), ...e,
-        genres: JSON.stringify(e.genres), cast: JSON.stringify(e.cast),
-        subtitles: JSON.stringify(e.subtitles),
-      });
-    }
-  });
-  tx(entries);
+export async function seedCatalog(db: Db, entries: SeedEntry[]): Promise<void> {
+  for (const e of entries) {
+    await db.query(
+      `INSERT INTO titles (id, slug, name, synopsis, year, genres, cast_list, rating,
+         duration_s, kind, status, hls_path, poster, backdrop, thumbs_vtt, subtitles)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'vod', 'ready', $10, $11, $12, $13, $14)
+       ON CONFLICT (slug) DO UPDATE SET
+         name = EXCLUDED.name, synopsis = EXCLUDED.synopsis, year = EXCLUDED.year,
+         genres = EXCLUDED.genres, cast_list = EXCLUDED.cast_list, rating = EXCLUDED.rating,
+         duration_s = EXCLUDED.duration_s, hls_path = EXCLUDED.hls_path,
+         poster = EXCLUDED.poster, backdrop = EXCLUDED.backdrop,
+         thumbs_vtt = EXCLUDED.thumbs_vtt, subtitles = EXCLUDED.subtitles`,
+      [
+        nanoid(10), e.slug, e.name, e.synopsis, e.year,
+        JSON.stringify(e.genres), JSON.stringify(e.cast), e.rating, e.durationS,
+        e.hlsPath, e.poster, e.backdrop, e.thumbsVtt, JSON.stringify(e.subtitles),
+      ],
+    );
+  }
 }

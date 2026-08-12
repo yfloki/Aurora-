@@ -82,7 +82,8 @@ const seedJson = JSON.parse(
   fs.readFileSync(path.join(root, 'apps', 'api', 'seed', 'titles.json'), 'utf8'));
 const available = seedJson.filter((e) =>
   fs.existsSync(path.join(dirs.hls, e.slug, 'master.m3u8')));
-const db = openDb(path.join(dirs.db, 'app.db'));
-seedCatalog(db, available);
+const db = await openDb(path.join(dirs.db, 'pg'));
+await seedCatalog(db, available);
 console.log(`\n✔ setup completo: ${available.length}/${seedJson.length} títulos prontos.`);
 if (failures.length) console.log(`  falharam: ${failures.join(', ')} (rode de novo para tentar só os faltantes)`);
+process.exit(0);

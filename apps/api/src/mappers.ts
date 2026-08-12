@@ -8,7 +8,7 @@ export function rowToTitle(row: any): Title {
     synopsis: row.synopsis,
     year: row.year,
     genres: JSON.parse(row.genres),
-    cast: JSON.parse(row.cast),
+    cast: JSON.parse(row.cast_list),
     rating: row.rating,
     durationS: row.duration_s,
     kind: row.kind,

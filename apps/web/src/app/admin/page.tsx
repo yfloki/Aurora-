@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useProfile } from '@/lib/profile';
+import { useAuthGuard } from '@/lib/useAuthGuard';
 import { Header } from '@/components/Header';
 import { UploadForm } from '@/components/admin/UploadForm';
 import { JobsBoard } from '@/components/admin/JobsBoard';
@@ -9,11 +10,12 @@ import { LivePanel } from '@/components/admin/LivePanel';
 
 export default function AdminPage() {
   const router = useRouter();
+  const { checking } = useAuthGuard();
   const { profile, ready } = useProfile();
   const [refreshSignal, setRefreshSignal] = useState(0);
 
   useEffect(() => { if (ready && !profile) router.replace('/profiles'); }, [ready, profile, router]);
-  if (!ready || !profile) {
+  if (checking || !ready || !profile) {
     return <main className="grid min-h-screen place-items-center text-muted">Carregando…</main>;
   }
 
