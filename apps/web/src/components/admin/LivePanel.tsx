@@ -13,6 +13,11 @@ export function LivePanel() {
   const [ytEnabled, setYtEnabled] = useState(false);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
+  // host real da página (produção mostra o domínio público, dev mostra localhost)
+  const [rtmpUrl, setRtmpUrl] = useState('rtmp://localhost:1935/live');
+  useEffect(() => {
+    setRtmpUrl(`rtmp://${window.location.hostname}:1935/live`);
+  }, []);
 
   const refresh = useCallback(() => {
     fetch(`${API_URL}/api/live/status`).then((r) => r.json()).then((s: FullStatus) => {
@@ -62,10 +67,10 @@ export function LivePanel() {
         <ol className="list-inside list-decimal space-y-1 text-muted">
           <li>Configurações → Transmissão → Serviço: <b className="text-fg">Personalizado</b></li>
           <li>
-            Servidor: <code className="rounded bg-black/40 px-1.5 py-0.5 text-fg">rtmp://localhost:1935/live</code>
+            Servidor: <code className="rounded bg-black/40 px-1.5 py-0.5 text-fg">{rtmpUrl}</code>
             <button
               onClick={() => {
-                navigator.clipboard?.writeText('rtmp://localhost:1935/live');
+                navigator.clipboard?.writeText(rtmpUrl);
                 setCopied(true);
                 setTimeout(() => setCopied(false), 1500);
               }}
