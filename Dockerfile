@@ -3,6 +3,10 @@
 # precisa ser exposta na web (além da 1935/tcp para ingest RTMP).
 FROM node:22-bookworm-slim
 
+# procps: o `concurrently -k` usa `ps` para gerenciar os processos filhos
+RUN apt-get update && apt-get install -y --no-install-recommends procps \
+  && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 
 # manifests primeiro para aproveitar cache de camada
