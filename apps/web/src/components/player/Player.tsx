@@ -7,6 +7,8 @@ import { putProgress } from '@/lib/api';
 import { usePlayer } from './usePlayer';
 import { Controls } from './Controls';
 import { parseThumbsVtt, type ThumbCue } from './ThumbStrip';
+import { useHlsStats, applyThrottle } from './useHlsStats';
+import { StatsPanel } from './StatsPanel';
 
 export function Player({ title, profileId, startPositionS = 0, isLive = false }: {
   title: Title; profileId: string; startPositionS?: number; isLive?: boolean;
@@ -16,10 +18,18 @@ export function Player({ title, profileId, startPositionS = 0, isLive = false }:
   const src = title.hlsPath ? mediaUrl(title.hlsPath) : null;
 
   const {
-    videoRef, playing, position, duration, buffered, volume, muted,
+    videoRef, hlsRef, playing, position, duration, buffered, volume, muted,
     togglePlay, seek, seekBy, setVolume, toggleMute,
     levels, currentLevel, autoLevel, setLevel, ready, error, retry,
   } = usePlayer(src, startPositionS);
+
+  const [showStats, setShowStats] = useState(false);
+  const [throttleBps, setThrottleBps] = useState<number | null>(null);
+  const { stats, series } = useHlsStats(hlsRef, videoRef, showStats);
+  const handleThrottle = useCallback((bps: number | null) => {
+    setThrottleBps(bps);
+    applyThrottle(hlsRef.current, bps);
+  }, [hlsRef]);
 
   const [visible, setVisible] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
@@ -84,7 +94,7 @@ export function Player({ title, profileId, startPositionS = 0, isLive = false }:
           toggleMute();
           break;
         case 'd':
-          // reservado para o painel de stats (Task 16)
+          setShowStats((s) => !s);
           break;
         default:
           break;
@@ -169,6 +179,21 @@ export function Player({ title, profileId, startPositionS = 0, isLive = false }:
             </button>
           </div>
         </div>
+      )}
+
+      {showStats && !error && (
+        <StatsPanel stats={stats} series={series}
+          throttleBps={throttleBps} onThrottle={handleThrottle} />
+      )}
+
+      {!error && visible && (
+        <button
+          onClick={() => setShowStats((s) => !s)}
+          title="Stats for nerds (D)"
+          className="glass absolute right-4 top-4 z-50 rounded-lg px-3 py-1.5 text-sm"
+        >
+          📊
+        </button>
       )}
 
       {!error && (
