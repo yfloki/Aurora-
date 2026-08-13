@@ -3,14 +3,14 @@ import { useRef } from 'react';
 import type { Title, ProgressEntry } from '@aurora/shared';
 import { TitleCard } from './TitleCard';
 
-export function Row({ label, titles, progress = [] }:
-  { label: string; titles: Title[]; progress?: ProgressEntry[] }) {
+export function Row({ label, titles, progress = [], id }:
+  { label: string; titles: Title[]; progress?: ProgressEntry[]; id?: string }) {
   const track = useRef<HTMLDivElement>(null);
   const scroll = (dir: 1 | -1) =>
     track.current?.scrollBy({ left: dir * track.current.clientWidth * 0.8, behavior: 'smooth' });
   const progFor = (id: string) => progress.find((p) => p.titleId === id);
   return (
-    <section className="group/row relative mb-10">
+    <section id={id} className="group/row relative mb-10 scroll-mt-20">
       <h2 className="font-display mb-3 px-8 text-xl font-semibold">{label}</h2>
       <div ref={track}
         className="flex snap-x gap-3 overflow-x-auto px-8 pb-4 [scrollbar-width:none]">

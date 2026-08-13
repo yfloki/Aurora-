@@ -50,7 +50,7 @@ export default function Home() {
               poster: null, hlsPath: live.hlsPath } as any} />
         </section>
       )}
-      {rows.map((r) => <Row key={r.key} label={r.label} titles={r.titles} progress={progress} />)}
+      {rows.map((r) => <Row key={r.key} id={r.key} label={r.label} titles={r.titles} progress={progress} />)}
     </main>
   );
 }
